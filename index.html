@@ -91,31 +91,48 @@
   </div>
 
   <script>
-    function sendMessage() {
+    async function sendMessage() {
       const input = document.getElementById('user-input');
       const message = input.value.trim();
       if (message === '') return;
 
       const chatBox = document.getElementById('chat-box');
 
-      // Add user message
+      // Add user message to chat
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = message;
       chatBox.appendChild(userMsg);
 
-      // Add fixed bot response
-      const botMsg = document.createElement('div');
-      botMsg.className = 'message bot';
-      botMsg.textContent = "Hello! I’m a simple bot. How can I help you?";
-      chatBox.appendChild(botMsg);
+      // Gửi message đến backend
+      try {
+        const response = await fetch('http://127.0.0.1:3001/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'user1',
+            message: message
+          })
+        });
 
-      // Clear input and scroll
+        const data = await response.json();
+
+        // Hiển thị phản hồi từ chatbot
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message bot';
+        botMsg.textContent = data.botMessage || 'Bot không phản hồi.';
+        chatBox.appendChild(botMsg);
+      } catch (error) {
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message bot';
+        botMsg.textContent = 'Lỗi khi gửi yêu cầu đến máy chủ.';
+        chatBox.appendChild(botMsg);
+      }
+
       input.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Enter key triggers send
     document.getElementById('user-input').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') sendMessage();
     });
